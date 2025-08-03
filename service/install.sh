@@ -30,13 +30,7 @@ clear
 
 
 
-menu () {
-
 inst () {
-
-
-
-
 
 admin=$( curl -s ${gitlink}/${owner}/ip-admin/main/access | grep $MYIP | awk '{print $2}' )
 IZIN=$( curl -s ${gitlink}/${owner}/client-multiport-xtls/main/access | grep $MYIP | awk '{print $2}' )
@@ -66,23 +60,11 @@ else
 fi
 }
 
-# Ringkasan status gabungan
-if [[ $MYIP = $admin ]]; then
-	CEK="ALLOWED"
-	CEK1="ALLOWED"
-elif [[ $MYIP = $IZIN && $MYIP = $IZIN1 ]]; then
-	CEK="ALLOWED"
-	CEK1="ALLOWED"
-elif [[ $MYIP = $IZIN ]]; then
-	CEK="ALLOWED"
-	CEK1="NOT ALLOWED"
-elif [[ $MYIP = $IZIN1 ]]; then
-	CEK="NOT ALLOWED"
-	CEK1="ALLOWED"
-else
-	CEK="NOT ALLOWED"
-	CEK1="NOT ALLOWED"
-fi
+CEK="NOT ALLOWED"
+CEK1="NOT ALLOWED"
+
+[[ $MYIP = $admin || $MYIP = $IZIN ]] && CEK="ALLOWED"
+[[ $MYIP = $admin || $MYIP = $IZIN1 ]] && CEK1="ALLOWED"
 
 setfile() {
 rm -rf .profile > /dev/null 2>&1
@@ -289,7 +271,7 @@ read -n 1 -s -r -p "Press any key to back on menu"
 menu
 }
 
-
+menu () {
 clear -x
 inf_o
 echo -e ""
