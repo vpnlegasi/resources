@@ -14,53 +14,71 @@ function fixes_os() {
   DISTFILE="/etc/opkg/distfeeds.conf"
   RELEASE_FILE="/etc/openwrt_release"
 
+  # baca info asas
   if [ -f "$RELEASE_FILE" ]; then
-    ver=$(grep DISTRIB_RELEASE "$RELEASE_FILE" | cut -d"'" -f2)
+    ver=$(grep -oE "[0-9]+\.[0-9]+\.[0-9]+" "$RELEASE_FILE")
     target_info=$(grep DISTRIB_TARGET "$RELEASE_FILE" | cut -d"'" -f2)
     arch=$(grep DISTRIB_ARCH "$RELEASE_FILE" | cut -d"'" -f2)
   fi
 
-  # fallback kalau undefined atau SNAPSHOT
+  # fallback jika version tak valid
   if [ -z "$ver" ] || [[ "$ver" == *SNAPSHOT* ]]; then
-    echo "⚠️  Detected SNAPSHOT or unknown version, fallback to 23.05.3"
+    echo "⚠️  Detected SNAPSHOT or unknown version — using stable fallback 23.05.3"
     ver="23.05.3"
   fi
 
+  # pecahkan target/subtarget
   target=$(echo "$target_info" | cut -d'/' -f1)
   subtarget=$(echo "$target_info" | cut -d'/' -f2)
   cpu=$(uname -m)
 
+  # fallback CPU-based mapping
   case "$cpu" in
     aarch64)
-      [ -z "$arch" ] && arch="aarch64_generic"
-      [ -z "$target" ] && target="rockchip"
-      [ -z "$subtarget" ] && subtarget="armv8"
+      arch="${arch:-aarch64_generic}"
+      target="${target:-rockchip}"
+      subtarget="${subtarget:-armv8}"
+      ;;
+    armv8l)
+      arch="${arch:-aarch64_cortex-a53}"
+      target="${target:-mediatek}"
+      subtarget="${subtarget:-mt7981}"
       ;;
     armv7l)
-      [ -z "$arch" ] && arch="arm_cortex-a9_vfpv3-d16"
-      [ -z "$target" ] && target="ramips"
-      [ -z "$subtarget" ] && subtarget="mt7621"
+      arch="${arch:-arm_cortex-a9_vfpv3-d16}"
+      target="${target:-ramips}"
+      subtarget="${subtarget:-mt7621}"
       ;;
     mips)
-      [ -z "$arch" ] && arch="mips_24kc"
-      [ -z "$target" ] && target="ath79"
-      [ -z "$subtarget" ] && subtarget="generic"
+      arch="${arch:-mips_24kc}"
+      target="${target:-ath79}"
+      subtarget="${subtarget:-generic}"
+      ;;
+    mipsel)
+      arch="${arch:-mipsel_24kc}"
+      target="${target:-ramips}"
+      subtarget="${subtarget:-mt7621}"
       ;;
     x86_64)
-      [ -z "$arch" ] && arch="x86_64"
-      [ -z "$target" ] && target="x86"
-      [ -z "$subtarget" ] && subtarget="64"
+      arch="${arch:-x86_64}"
+      target="${target:-x86}"
+      subtarget="${subtarget:-64}"
+      ;;
+    i686|i386)
+      arch="${arch:-x86_generic}"
+      target="${target:-x86}"
+      subtarget="${subtarget:-generic}"
       ;;
     *)
-      [ -z "$arch" ] && arch="aarch64_generic"
-      [ -z "$target" ] && target="rockchip"
-      [ -z "$subtarget" ] && subtarget="armv8"
+      arch="${arch:-aarch64_generic}"
+      target="${target:-rockchip}"
+      subtarget="${subtarget:-armv8}"
       ;;
   esac
 
-  echo "🛠 Generating distfeeds.conf for OpenWrt $ver ($arch - $target/$subtarget)"
+  echo "🛠  Generating distfeeds.conf for OpenWrt $ver ($arch → $target/$subtarget)"
 
-  cat <<EOF > "$DISTFILE"
+  cat > "$DISTFILE" <<EOF
 src/gz openwrt_core https://downloads.openwrt.org/releases/${ver}/targets/${target}/${subtarget}/packages
 src/gz openwrt_base https://downloads.openwrt.org/releases/${ver}/packages/${arch}/base
 src/gz openwrt_luci https://downloads.openwrt.org/releases/${ver}/packages/${arch}/luci
