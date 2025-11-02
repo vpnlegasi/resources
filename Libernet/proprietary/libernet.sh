@@ -91,6 +91,7 @@ EOF
 fixes_os
 
 # Pastikan clean dulu
+rm -rf ~/Downloads/libernet
 rm -rf "$TMP_DIR"
 
 # Periksa sama ada git ada, kalau tak ada cuba install
