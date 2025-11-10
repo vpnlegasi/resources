@@ -268,7 +268,7 @@ cat > /usr/local/etc/xray/vless.json <<END
         "security": "none",
         "httpupgradeSettings": {
           "path": "/httpupgrade",
-          "acceptProxyProtocol": true
+          "acceptProxyProtocol": false
         }
       },
       "sniffing": {
